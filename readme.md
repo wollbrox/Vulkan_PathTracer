@@ -1,1 +1,2 @@
-# Vulkan PathTracer
+# Vulkan Path Tracer
+
