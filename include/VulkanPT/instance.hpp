@@ -7,7 +7,62 @@
 
 namespace VulkanInit
 {
-  vk::Instance MakeInstance(bool debug, const char* application_name)
+  bool Supported(std::vector<const char*>& in_extensions,
+                 std::vector<const char*>& in_layers)
+  {
+    // check extensions support
+    std::vector<vk::ExtensionProperties> supported_extensions = vk::enumerateInstanceExtensionProperties();
+    Debug::Log("This device can support the following extensions:");
+    for (vk::ExtensionProperties supported_extension : supported_extensions)
+      Debug::Log("%s", supported_extension.extensionName);
+
+    bool found;
+    for (const char* extension : in_extensions)
+    {
+      found = false;
+      for (vk::ExtensionProperties supported_extension : supported_extensions)
+      {
+        if (strcmp(extension, supported_extension.extensionName) == 0)
+        {
+          found = true;
+          Debug::Log("Extension %s is supported!", extension);
+        }
+      }
+      if (!found)
+      {
+        Debug::Log("Extension %s is not supported!", extension);
+        return false;
+      }
+    }
+
+    // check layers support
+    std::vector<vk::LayerProperties> supported_layers = vk::enumerateInstanceLayerProperties();
+    Debug::Log("This device can support the following layers:");
+    for (vk::LayerProperties supported_layer : supported_layers)
+      Debug::Log("%s", supported_layer.layerName);
+
+    for (const char* layer : in_layers)
+    {
+      found = false;
+      for (vk::LayerProperties supported_layer : supported_layers)
+      {
+        if (strcmp(layer, supported_layer.layerName) == 0)
+        {
+          found = true;
+          Debug::Log("Layer %s is supported!", layer);
+        }
+      }
+      if (!found)
+      {
+        Debug::Log("Layer %s is not supported!", layer);
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  vk::Instance MakeInstance(const char* application_name)
   {
     Debug::Log("Creating and instance\n");
 
@@ -30,12 +85,25 @@ namespace VulkanInit
     glfw_extensions = glfwGetRequiredInstanceExtensions(&glfw_extension_count);
     std::vector<const char*> extensions(glfw_extensions, glfw_extensions + glfw_extension_count);
 
+#ifdef DEBUG
+    extensions.push_back("VK_EXT_debug_utils");
+#endif // DEBUG
+
     Debug::Log("extensions to be requested:\n");
     for (const char* extension_name : extensions)
       Debug::Log(" %s \n", extension_name);
 
-    vk::InstanceCreateInfo create_info = vk::InstanceCreateInfo(vk::InstanceCreateFlags(),
-                                                                &app_info, 0, nullptr,
+    std::vector<const char*> layers;
+
+#ifdef DEBUG
+    layers.push_back("VK_LAYER_KHRONOS_validation");
+#endif //DEBUG
+
+    if (!Supported(extensions, layers)) return nullptr;
+
+    vk::InstanceCreateInfo create_info = vk::InstanceCreateInfo(vk::InstanceCreateFlags(), &app_info,
+                                                                static_cast<uint32_t>(layers.size()),
+                                                                layers.data(),
                                                                 static_cast<uint32_t>(extensions.size()),
                                                                 extensions.data());
 
