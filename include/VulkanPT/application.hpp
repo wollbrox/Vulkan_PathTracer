@@ -20,13 +20,17 @@ class Application
  private:
 
   void MakeInstance();
-  void MakeDebugMessenger();
+  void MakeDevice();
 
   Window window { width, height, "Hello Vulkan!!"};
 
   vk::Instance instance { nullptr };
   vk::DebugUtilsMessengerEXT debug_messenger { nullptr };
   vk::DispatchLoaderDynamic dispatch_loader;
+
+  vk::PhysicalDevice physical_device { nullptr };
+  vk::Device device { nullptr };
+  vk::Queue graphics_queue { nullptr };
 
 };
 
