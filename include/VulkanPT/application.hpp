@@ -2,8 +2,8 @@
 #ifndef APPLICATION_HPP
 #define APPLICATION_HPP
 
-#include <VulkanPT/window.hpp>
 #include <VulkanPT/config.hpp>
+#include <VulkanPT/window.hpp>
 
 class Application
 {
@@ -27,10 +27,12 @@ class Application
   vk::Instance instance { nullptr };
   vk::DebugUtilsMessengerEXT debug_messenger { nullptr };
   vk::DispatchLoaderDynamic dispatch_loader;
+  vk::SurfaceKHR surface;
 
   vk::PhysicalDevice physical_device { nullptr };
   vk::Device device { nullptr };
   vk::Queue graphics_queue { nullptr };
+  vk::Queue present_queue { nullptr };
 
 };
 

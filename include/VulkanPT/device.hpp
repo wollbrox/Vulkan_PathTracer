@@ -82,7 +82,7 @@ namespace VulkanInit
     return nullptr;
   }
 
-  QueueFamilyIndices FindQueueFamilies(vk::PhysicalDevice device)
+  QueueFamilyIndices FindQueueFamilies(vk::PhysicalDevice device, vk::SurfaceKHR surface)
   {
     QueueFamilyIndices indices;
     std::vector<vk::QueueFamilyProperties> queue_families = device.getQueueFamilyProperties();
@@ -94,8 +94,13 @@ namespace VulkanInit
       if (queue_family.queueFlags & vk::QueueFlagBits::eGraphics)
       {
         indices.graphics_family = index;
+        Debug::Log("Queue Family %i is suitable for graphics!", index);
+      }
+
+      if (device.getSurfaceSupportKHR(index, surface))
+      {
         indices.present_family = index;
-        Debug::Log("Queue Family %i is suitable for graphics and presenting!", index);
+        Debug::Log("Queue Family %i is suitable for presenting!", index);
       }
 
       if (indices.IsComplete()) break;
@@ -106,13 +111,22 @@ namespace VulkanInit
     return indices;
   }
 
-  vk::Device CreateLogicalDevice(vk::PhysicalDevice physical_device)
+  vk::Device CreateLogicalDevice(vk::PhysicalDevice physical_device, vk::SurfaceKHR surface)
   {
-    QueueFamilyIndices indices = FindQueueFamilies(physical_device);
+    QueueFamilyIndices indices = FindQueueFamilies(physical_device, surface);
+    
+    std::vector<uint32_t> unique_indices;
+    unique_indices.push_back(indices.graphics_family.value());
+    if (indices.graphics_family.value() != indices.present_family.value())
+      unique_indices.push_back(indices.present_family.value());
+
     float queue_priority = 1.0f;
-    vk::DeviceQueueCreateInfo queue_create_info = vk::DeviceQueueCreateInfo(vk::DeviceQueueCreateFlags(),
-                                                                            indices.graphics_family.value(),
-                                                                            1, &queue_priority);
+    std::vector<vk::DeviceQueueCreateInfo> queue_create_info;
+    for (uint32_t queue_family_index : unique_indices)
+      queue_create_info.emplace_back(vk::DeviceQueueCreateFlags(),
+                                     queue_family_index,
+                                     1, &queue_priority);
+
     vk::PhysicalDeviceFeatures device_features = vk::PhysicalDeviceFeatures();
     
     std::vector<const char*> enabled_layers;
@@ -121,8 +135,9 @@ namespace VulkanInit
 #endif // DEBUG
     
     vk::DeviceCreateInfo device_info = vk::DeviceCreateInfo(vk::DeviceCreateFlags(),
-                                                            1, &queue_create_info,
-                                                            enabled_layers.size(),
+                                                            static_cast<int>(queue_create_info.size()),
+                                                            queue_create_info.data(),
+                                                            static_cast<int>(enabled_layers.size()),
                                                             enabled_layers.data(),
                                                             0, nullptr,
                                                             &device_features);
@@ -141,10 +156,12 @@ namespace VulkanInit
     return nullptr;
   }
 
-  vk::Queue getQueue(vk::PhysicalDevice physical_device, vk::Device device)
+  std::array<vk::Queue, 2> getQueues(vk::PhysicalDevice physical_device,
+                                     vk::SurfaceKHR surface, vk::Device device)
   {
-    QueueFamilyIndices indices = FindQueueFamilies(physical_device);
-    return device.getQueue(indices.graphics_family.value(), 0);
+    QueueFamilyIndices indices = FindQueueFamilies(physical_device, surface);
+    return { { device.getQueue(indices.graphics_family.value(), 0),
+               device.getQueue(indices.present_family.value(), 0) } };
   }
 
 } // namespace VulkanInit

@@ -26,3 +26,5 @@ void Window::Init()
   else
     Debug::Error("GLFW Window creation failed!");
 }
+
+GLFWwindow* Window::getInstance() { return window; }

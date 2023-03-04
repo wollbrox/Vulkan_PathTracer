@@ -12,6 +12,7 @@ class Window
   ~Window();
 
   bool Close() { return glfwWindowShouldClose(window); }
+  GLFWwindow* getInstance();
 
  private:
   
