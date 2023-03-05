@@ -8,6 +8,7 @@ Application::Application() {}
 
 Application::~Application()
 {
+  device.destroySwapchainKHR(swapchain);
   device.destroy();
   instance.destroySurfaceKHR(surface);
 
@@ -20,8 +21,8 @@ Application::~Application()
 
 void Application::Init()
 {
-  MakeInstance();
-  MakeDevice();
+  CreateInstance();
+  CreateDevice();
 }
 
 void Application::Run()
@@ -33,7 +34,7 @@ void Application::Run()
   }*/
 }
 
-void Application::MakeInstance()
+void Application::CreateInstance()
 {
   instance = VulkanInit::MakeInstance("Vulkan Path Tracer");
   dispatch_loader = vk::DispatchLoaderDynamic(instance, vkGetInstanceProcAddr);
@@ -51,11 +52,20 @@ void Application::MakeInstance()
   surface = c_style_surface;
 }
 
-void Application::MakeDevice()
+void Application::CreateDevice()
 {
   physical_device = VulkanInit::ChoosePhysicalDevice(instance);
   device = VulkanInit::CreateLogicalDevice(physical_device, surface);
   std::array<vk::Queue, 2> queues = VulkanInit::getQueues(physical_device, surface, device);
   graphics_queue = queues[0];
   present_queue = queues[1];
+
+  VulkanInit::SwapChainBundle bundle = VulkanInit::CreateSwapchain(device,
+                                                                   physical_device,
+                                                                   surface,
+                                                                   width, height);
+  swapchain = bundle.swapchain;
+  swapchain_images = bundle.images;
+  swapchain_format = bundle.format;
+  swapchain_extent = bundle.extent;
 }
