@@ -3,6 +3,7 @@
 #include <VulkanPT/instance.hpp>
 #include <VulkanPT/logging.hpp>
 #include <VulkanPT/device.hpp>
+#include <VulkanPT/swapchain.hpp>
 
 Application::Application() {}
 

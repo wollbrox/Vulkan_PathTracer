@@ -31,6 +31,22 @@ namespace VulkanInit
     return in_instance.createDebugUtilsMessengerEXT(create_info, nullptr, in_distach_loader);
   }
 
+  void LogDeviceProperties(const vk::PhysicalDevice& device)
+  {
+    vk::PhysicalDeviceProperties properties = device.getProperties();
+
+    Debug::Log("Device name: %s", properties.deviceName);
+    Debug::Log("Device type:");
+    switch (properties.deviceType)
+    {
+    case vk::PhysicalDeviceType::eCpu: Debug::Log("CPU"); break;
+    case vk::PhysicalDeviceType::eDiscreteGpu: Debug::Log("Discrete GPU"); break;
+    case vk::PhysicalDeviceType::eIntegratedGpu: Debug::Log("Integrated GPU"); break;
+    case vk::PhysicalDeviceType::eVirtualGpu: Debug::Log("Virtual GPU"); break;
+    default: Debug::Log("Other"); break;
+    }
+  }
+
   std::vector<std::string> LogTransformBits(vk::SurfaceTransformFlagsKHR bits)
   {
     std::vector<std::string> result;
