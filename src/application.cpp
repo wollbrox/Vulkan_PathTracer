@@ -9,6 +9,9 @@ Application::Application() {}
 
 Application::~Application()
 {
+  for (VulkanUtils::SwapChainFrame frame : swapchain_frames)
+    device.destroyImageView(frame.image_view);
+
   device.destroySwapchainKHR(swapchain);
   device.destroy();
   instance.destroySurfaceKHR(surface);
@@ -66,7 +69,7 @@ void Application::CreateDevice()
                                                                    surface,
                                                                    width, height);
   swapchain = bundle.swapchain;
-  swapchain_images = bundle.images;
+  swapchain_frames = bundle.frames;
   swapchain_format = bundle.format;
   swapchain_extent = bundle.extent;
 }

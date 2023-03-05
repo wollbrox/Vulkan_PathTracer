@@ -5,6 +5,7 @@
 #include <VulkanPT/config.hpp>
 #include <VulkanPT/logging.hpp>
 #include <VulkanPT/queue_families.hpp>
+#include <VulkanPT/frame.hpp>
 
 namespace VulkanInit
 {
@@ -18,7 +19,7 @@ namespace VulkanInit
   struct SwapChainBundle
   {
     vk::SwapchainKHR swapchain;
-    std::vector<vk::Image> images;
+    std::vector<VulkanUtils::SwapChainFrame> frames;
     vk::Format format;
     vk::Extent2D extent;
   };
@@ -162,7 +163,28 @@ namespace VulkanInit
     try { bundle.swapchain = logical_device.createSwapchainKHR(create_info); }
     catch (vk::SystemError err) { Debug::Error("Failed to create a Swapchain!"); }
 
-    bundle.images = logical_device.getSwapchainImagesKHR(bundle.swapchain);
+    std::vector<vk::Image> images = logical_device.getSwapchainImagesKHR(bundle.swapchain);
+    bundle.frames.resize(images.size());
+    
+    for (size_t i = 0; i < images.size(); ++i)
+    {
+      vk::ImageViewCreateInfo create_info = {};
+      create_info.image = images[i];
+      create_info.viewType = vk::ImageViewType::e2D;
+      create_info.components.r = vk::ComponentSwizzle::eIdentity;
+      create_info.components.g = vk::ComponentSwizzle::eIdentity;
+      create_info.components.b = vk::ComponentSwizzle::eIdentity;
+      create_info.components.a = vk::ComponentSwizzle::eIdentity;
+      create_info.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+      create_info.subresourceRange.baseMipLevel = 0;
+      create_info.subresourceRange.levelCount = 1;
+      create_info.subresourceRange.baseArrayLayer = 0;
+      create_info.subresourceRange.layerCount = 1;
+      create_info.format = format.format;
+
+      bundle.frames[i].image = images[i];
+    }
+
     bundle.format = format.format;
     bundle.extent = extent;
 

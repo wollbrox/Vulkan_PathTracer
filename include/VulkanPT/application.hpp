@@ -4,6 +4,7 @@
 
 #include <VulkanPT/config.hpp>
 #include <VulkanPT/window.hpp>
+#include <VulkanPT/frame.hpp>
 
 class Application
 {
@@ -34,8 +35,8 @@ class Application
   vk::Queue graphics_queue { nullptr };
   vk::Queue present_queue { nullptr };
 
-  vk::SwapchainKHR swapchain;
-  std::vector<vk::Image> swapchain_images;
+  vk::SwapchainKHR swapchain { nullptr };
+  std::vector<VulkanUtils::SwapChainFrame> swapchain_frames;
   vk::Format swapchain_format;
   vk::Extent2D swapchain_extent;
 
